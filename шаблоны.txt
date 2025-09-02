@@ -1,0 +1,480 @@
+-- переименование
+ SELECT * FROM balance_api.fn_balance_article_rename
+ (
+  p_article_id =>,
+  p_article_name => '',
+  p_old_date => '',
+  p_new_valid_date => '2099-12-31'
+  );
+
+ -- из массива
+SELECT  balance_api.fn_balance_article_rename
+ (
+  p_article_id =>id,
+  p_article_name => name,
+  p_old_date => '2023-02-01',
+  p_new_valid_date => '2099-12-31'
+  )
+from   
+unnest(
+array[
+ 000000000000,
+000000000000
+],
+array [
+'',
+''
+]
+) ar(id, name)
+;
+
+
+SELECT FROM balance_api.fn_balance_article_rename_before
+ (
+  p_article_id =>,
+  p_article_name => '',
+  p_old_date => ''
+  );
+
+-- уровень 
+SELECT FROM balance_api.fn_balance_article_level_set
+ (
+  p_article_id => ,
+  p_begin_date => '' ,
+  p_end_date   => '2099-12-31',
+  p_parent_id  =>  ,
+  p_level      => 
+  );
+  
+select balance_api.fn_balance_article_level_set
+ (
+  p_article_id => id,
+  p_begin_date => '',
+  p_end_date   => '2099-12-31',
+  p_parent_id  => ,
+  p_level      => 
+  )
+  from unnest(
+array [
+
+]) id
+;
+
+-- уровень перед
+select balance_api.fn_balance_article_level_set_before
+ (
+  p_article_id => id,
+  p_begin_date => '',
+  p_end_date   => '2099-12-31',
+  p_parent_id  => ,
+  p_level      => 
+  )
+  from unnest(
+array [
+
+]) id
+;
+
+select from balance_api.fn_balance_article_ord_set
+ (
+  p_article_id => ,
+  p_article_ord =>,
+  p_valid_date =>
+ )
+
+select from balance_api.fn_balance_article_shift
+ (
+  p_article_id => ,
+  p_article_ord =>,
+  p_valid_date =>
+ ) ;
+
+-- ренумерация
+SELECT FROM balance_api.fn_balance_article_renum_up_down
+    (p_report_id => ,
+     p_begin_ord => ,
+     p_end_ord => 1000,
+     p_shift_ord => 1,
+     p_old_valid_date => '',
+     p_new_valid_date => '2099-12-31'
+    ); 
+
+--добавление
+SELECT * FROM balance_api.fn_balance_article_add_1
+ (p_report_id => ,
+  p_article_name => '' ,
+  p_article_ord =>  ,
+  p_begin_date => '' ,
+  p_end_date => '2099-12-31' ,
+  p_parent_id => ,
+  p_level  =>  ,
+  p_article_id => balance_api.fn_get_new_obj_ids(1)::bigint
+  );
+
+-- идентификаторы
+select * from  balance_api.fn_get_new_obj_ids();
+
+balance_api.fn_goi();
+-- добавление  иЗ массива
+SELECT balance_api.fn_balance_article_add_1
+ (p_report_id => ,
+  p_article_name => name ,
+  p_article_ord => ord ,
+  p_begin_date => '',
+  p_end_date => '2099-12-31' ,
+  p_parent_id => pid,
+  p_level  => lvl ,
+  p_article_id =>id
+  )   
+from unnest( array
+[
+(
+ id, ''::text,	ord,	lvl,	pid
+)
+]
+) as ar(id bigint, name text, ord int, lvl int , pid bigint);
+
+-- начальная дата
+select   balance_api.fn_balance_article_begin_date_set(id,  '')
+from unnest(
+array [
+
+]) id
+; 
+
+-- конечная дата
+select   balance_api.fn_balance_article_end_date_set(id,  '', true)
+from unnest(
+array [
+]) id
+; 
+
+update data_master.objects_attributes
+set value_ = 
+where object_id = 
+  and param_id = 
+;
+
+
+
+-- атрибуты объекта
+select * from data_master.objects_attributes
+where object_id = 
+;
+
+param_id = 102000010000 --наименование
+param_id = 102000012100	--Порядковый номер
+param_id = 102000012101 --Дата начала
+param_id = 102000012102	--Дата окончания
+param_id = 102000012103 --Уровень в иерархии
+
+
+-- связь
+select * from data_relations.relations
+where id_1 in  ()
+;
+
+-- атрибуты связи
+  select * from data_relations.relations_attributes 
+where relation_id in
+(select relation_id from data_relations.relations
+where id_1 in  ()
+);
+
+
+-- физическое удаление
+delete from data_master.objects
+where object_id in (
+)
+;
+
+delete from data_relations.relations
+where id_1 in ( 
+)  or id_2 in (
+);
+
+
+-- очистка всего баланса
+delete from data_master.objects
+where object_id in (
+select article_id from balance_datamart.mv_bal_articles_tmp
+where bal_id = 
+)
+;
+
+delete from data_relations.relations
+where id_1 in ( select article_id from balance_datamart.mv_bal_articles_tmp
+where bal_id = 
+)  or id_2 in (select article_id from balance_datamart.mv_bal_articles_tmp
+where bal_id = 
+);
+
+
+
+refresh materialized view balance_datamart.mv_bal_articles;
+
+ 
+
+select * from balance_datamart.mv_bal_articles_tmp
+where bal_id = 
+order by ord
+;
+
+-- загрузка архивных данных
+INSERT INTO
+          data_timeseries.objects_timeseries
+        (
+          object_id,
+          param_id,
+          series_time,
+          value,
+          value_type,
+          load_time,
+          source_id,
+          status,
+          period_id,
+          analytic_id,
+          unit_id
+        )
+      select 
+          object_id,
+          102000012000, -- Объём - баланс
+          series_time::timestamp,
+          trim(value)::numeric,
+          10, -- баланс
+          CURRENT_TIMESTAMP,
+          200, -- архивные балансовые сводки
+          1, -- актуальный
+          '24H', -- Сутки
+          'Ф', -- Факт
+          103000010004
+        from  bal_load.archive_data
+        where trim(value) <>'';
+
+-- загрузка сводки из csv
+do
+$$
+declare
+   rec record;
+   _new_id bigint;
+   _parent_name text;
+   _parent_id bigint;
+
+   _rel_id bigint;
+begin
+
+  update bal_load.tmp_load set object_id = nextval('data_master.object_seq');
+
+
+
+update bal_load.tmp_load t1 set parent_id =
+(select t2.object_id
+       from bal_load.tmp_load t2 where t2.article_id = t1.parent)
+WHERE parent like 'ID%'
+       ;
+  for rec in (select * from  bal_load.tmp_load) loop
+
+   -- статья
+   INSERT INTO
+   data_master.objects
+    (
+      object_id,
+      object_name,
+      description,
+      dict_id,
+      valid
+    )
+    VALUES (
+     rec.object_id,
+     ltrim(rec.article),
+     '',
+     101000020001,
+     rec.end_date::timestamp
+    ) returning object_id into _new_id;
+
+    raise notice '% %', _new_id, rec.article;
+
+    perform balance_api.fn_balance_article_name_set(_new_id, ltrim(rec.article), rec.name_end_date::timestamp);
+
+    -- связь с балансом
+    insert into
+      data_relations.relations
+        (
+          relation_id,
+          id_2,
+          id_1,
+          relation_name,
+          aspect_id,
+          rel_type_id
+        )
+        values (
+          nextval('data_relations.rel_seq'),
+          _new_id,
+          0000000000000-- баланс
+          'Наименование баланса' || '>' || ltrim(rec.article),
+          3010000000004, -- аспект баланс
+          3020000000002 -- входит в состав
+        );
+
+     -- порядковый номер для сортировки
+
+     /* perform balance_api.fn_balance_article_shift (
+      _new_id,
+      rec.ord_start,
+      rec.ord_start_valid::timestamp
+      );*/
+
+      insert into 	 data_master.objects_attributes
+       (
+         attr_id,
+         attr_name,
+         value_num,
+         param_id,
+         object_id,
+         valid
+         )
+      values (
+           nextval('data_master.obj_attr_seq'),
+           'Порядковый номер',
+           rec.ord,
+           102000012100,
+           _new_id,
+           rec.ord_end_date::timestamp
+         );
+
+
+      -- даты начала и окончания
+    insert into
+    data_master.objects_attributes
+      (
+        attr_id,
+        attr_name,
+        value_date,
+        param_id,
+        object_id,
+        valid
+      )
+      values (
+        nextval('data_master.obj_attr_seq'),
+        'Дата начала',
+        rec.begin_date::timestamp,
+        102000012101,
+        _new_id,
+        rec.end_date::timestamp
+      );
+
+      insert into
+      data_master.objects_attributes
+       (
+        attr_id,
+        attr_name,
+        value_date,
+        param_id,
+        object_id,
+        valid
+       )
+       values (
+        nextval('data_master.obj_attr_seq'),
+        'Дата окончания',
+        rec.end_date::timestamp,
+        102000012102,
+        _new_id,
+        rec.end_date::timestamp
+        );
+
+      -- иерархия
+
+	-- уровень в иерархии
+
+      select object_name into _parent_name
+      from data_master.objects
+      where object_id = rec.parent_id;
+
+       select article into  _parent_name from bal_load.tmp_load
+       where object_id = rec.parent_id;
+
+      insert into
+      data_relations.relations
+        (
+          relation_id,
+          id_2,
+          id_1,
+          relation_name,
+          aspect_id,
+          rel_type_id
+        )
+        values (
+          nextval('data_relations.rel_seq'),
+          rec.parent_id,
+          _new_id,
+          _parent_name || '>' || rec.article,
+          3010000000004, -- аспект баланс
+          3020000000002 -- входит в состав
+        ) returning relation_id into _rel_id ;
+
+
+        insert into
+         data_relations.relations_attributes
+          (
+            attr_id,
+            attr_name,
+            value_date,
+            param_id,
+            relation_id,
+            valid
+          )
+          values (
+            nextval('data_relations.rel_attr_seq'),
+            'Дата начала',
+            rec.begin_date::timestamp,
+            102000012101,
+            _rel_id,
+            rec.lvl_end_date::timestamp
+          );
+
+          insert into
+          data_relations.relations_attributes
+            (
+              attr_id,
+              attr_name,
+              value_date,
+              param_id,
+              relation_id,
+              valid
+            )
+            values (
+              nextval('data_relations.rel_attr_seq'),
+              'Дата окончания',
+              rec.lvl_end_date::timestamp,
+              102000012102,
+              _rel_id,
+              rec.lvl_end_date::timestamp
+          );
+
+          insert into
+          data_relations.relations_attributes
+           (
+            attr_id,
+            attr_name,
+            value_num,
+            param_id,
+            relation_id,
+            valid
+           )
+          values (
+            nextval('data_master.obj_attr_seq'),
+            'Уровень в иерархии',
+            rec.lvl,
+            102000012103,
+            _rel_id,
+            rec.lvl_end_date::timestamp
+          );
+
+
+
+
+  end loop;
+
+end;
+$$
+;
